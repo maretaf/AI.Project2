@@ -1,1 +1,809 @@
-# AI.Project2
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بهینه‌سازی سبد خرید لیلی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nutrient-card-info {
+            display: none;
+            padding: 8px;
+            background-color: #f0f9ff; /* bg-sky-50 */
+            border: 1px solid #bae6fd; /* border-sky-200 */
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        .nutrient-card:hover .nutrient-card-info {
+            display: block;
+        }
+        .active-tab {
+            border-bottom-width: 4px;
+            border-color: #059669; /* border-emerald-600 */
+            color: #059669; /* text-emerald-600 */
+        }
+        .tab-btn {
+            padding-bottom: 0.5rem;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #059669; /* emerald-600 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #047857; /* emerald-700 */
+        }
+        .gemini-feature-btn {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .gemini-feature-btn:hover {
+            background-color: #059669; /* emerald-600 */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #059669; /* emerald-600 */
+            animation: spin 1s ease infinite;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .code-block {
+            background-color: #f3f4f6; /* bg-slate-100 */
+            border: 1px solid #e5e7eb; /* border-slate-200 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            direction: ltr; /* For LTR code display */
+            text-align: left; /* For LTR code display */
+        }
+        .code-block pre {
+            white-space: pre-wrap; /* Allow wrapping */
+            word-wrap: break-word; /* Break long words */
+        }
+         .code-block code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            color: #1f2937; /* text-slate-800 */
+        }
+    </style>
+    <!-- Visualization & Content Choices:
+        - Introduction: Text. Goal: Inform. Method: HTML.
+        - Needs/Constraints: Cards, Text, Gemini Button. Goal: Inform/Engage. Method: HTML/JS/Gemini.
+        - Available Foods: Table. Goal: Inform. Method: HTML.
+        - Optimization Algorithms: Tabs, Text, Charts. Goal: Educate/Illustrate. Method: HTML/JS/Chart.js.
+        - Sample Results: List, Gemini Button, Chart, Text. Goal: Illustrate/Engage. Method: HTML/JS/Gemini/Chart.js.
+        - ✨ Python Code Walkthrough: Accordion/Collapsible sections with explanations and code snippets. Goal: Educate/Transparency. Method: HTML/JS for interactivity, `<pre><code>` for code.
+        - About: Text. Goal: Inform. Method: HTML.
+        - Justification: Clarity, engagement, and now code transparency. NO SVG/Mermaid.
+    -->
+    </head>
+<body class="bg-slate-50 text-slate-700 leading-relaxed">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-emerald-700">سبد خرید لیلی</a>
+            <div class="hidden md:flex space-x-4 space-x-reverse">
+                <a href="#introduction" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">مقدمه</a>
+                <a href="#needs" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">نیازها</a>
+                <a href="#foods" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">مواد غذایی</a>
+                <a href="#algorithms" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">الگوریتم‌ها</a>
+                <a href="#results" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">نتایج نمونه</a>
+                <a href="#code-project" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">کد پروژه</a>
+                <a href="#about" class="text-slate-600 hover:text-emerald-600 px-3 py-2 rounded-md">درباره پروژه</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-600 hover:text-emerald-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg">
+            <a href="#introduction" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">مقدمه</a>
+            <a href="#needs" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">نیازها و محدودیت‌ها</a>
+            <a href="#foods" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">مواد غذایی</a>
+            <a href="#algorithms" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">الگوریتم‌ها</a>
+            <a href="#results" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">نتایج نمونه</a>
+            <a href="#code-project" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">کد پروژه</a>
+            <a href="#about" class="block text-slate-600 hover:text-emerald-600 px-4 py-2">درباره پروژه</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+
+        <section id="introduction" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-6 text-center">مقدمه: چالش سبد غذایی لیلی</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg text-lg">
+                <p class="mb-4">
+                    این اپلیکیشن تعاملی، به بررسی مسئله‌ی بهینه‌سازی سبد خرید ماهانه "لیلی" می‌پردازد. لیلی، دانشجوی ۲۱ ساله رشته کامپیوتر، قصد دارد ۲۵٪ از درآمد ماهانه ۱۶ میلیون تومانی خود، یعنی ۴ میلیون تومان، را صرف خرید مواد غذایی برای یک رژیم سالم کند. او نیازهای تغذیه‌ای روزانه‌اش را مشخص کرده و فهرستی از مواد غذایی موجود در بازار به همراه ارزش غذایی و قیمت آن‌ها تهیه کرده است.
+                </p>
+                <p class="mb-4">
+                    هدف اصلی این پروژه (همان‌طور که در "پروژه ۲" توضیح داده شده) طراحی یک سبد خرید ماهانه (برای ۳۰ روز) است که با استفاده از الگوریتم‌های ژنتیک و تبرید شبیه‌سازی‌شده، نیازهای تغذیه‌ای لیلی را ضمن رعایت بودجه، به بهترین شکل ممکن تأمین کند. این صفحه به شما کمک می‌کند تا با جنبه‌های مختلف این مسئله، از نیازها و محدودیت‌ها گرفته تا روش‌های حل و نتایج نمونه، آشنا شوید.
+                </p>
+            </div>
+        </section>
+
+        <section id="needs" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">نیازها و محدودیت‌ها</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-semibold text-emerald-600 mb-4">نیازهای تغذیه‌ای روزانه لیلی</h3>
+                <p class="mb-6">رژیم روزانه لیلی باید حداقل شامل مقادیر زیر باشد. نیازهای ماهانه، ۳۰ برابر این مقادیر است. با نگه داشتن ماوس روی هر کارت، ترجیح لیلی برای آن ماده مغذی را مشاهده کنید.</p>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">کالری</h4>
+                        <p class="text-slate-600">۲۰۰۰ کیلوکالری</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی کمتر (به دلیل فعالیت بدنی متوسط)</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">پروتئین</h4>
+                        <p class="text-slate-600">۱۰۰ گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی بیشتر (برای تقویت عضلات)</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">چربی</h4>
+                        <p class="text-slate-600">۶۰ گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: دقیقاً یا کمی کمتر</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">کربوهیدرات</h4>
+                        <p class="text-slate-600">۲۵۰ گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی کمتر (محدود کردن قند ساده)</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">فیبر</h4>
+                        <p class="text-slate-600">۲۵ گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی بیشتر (برای سلامت گوارش)</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">کلسیم</h4>
+                        <p class="text-slate-600">۱۰۰۰ میلی‌گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی بیشتر (برای سلامت استخوان)</div>
+                    </div>
+                    <div class="nutrient-card bg-emerald-50 p-4 rounded-lg shadow hover:shadow-xl transition-shadow">
+                        <h4 class="text-xl font-semibold text-emerald-700">آهن</h4>
+                        <p class="text-slate-600">۱۸ میلی‌گرم</p>
+                        <div class="nutrient-card-info mt-2 text-emerald-700">ترجیح: کمی بیشتر (برای پیشگیری از کم‌خونی)</div>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-4 bg-sky-50 rounded-lg border border-sky-200">
+                    <h4 class="text-xl font-semibold text-sky-700 mb-3">✨ نکته تغذیه‌ای روز</h4>
+                    <p id="nutritional-tip-text" class="text-slate-600 min-h-[40px]">برای دریافت نکته، دکمه زیر را فشار دهید.</p>
+                    <button id="get-nutritional-tip-btn" class="gemini-feature-btn mt-3">دریافت نکته جدید</button>
+                    <div id="tip-loading-spinner" class="loading-spinner hidden"></div>
+                </div>
+
+                <h3 class="text-2xl font-semibold text-emerald-600 mb-4 mt-8">محدودیت‌ها</h3>
+                <ul class="list-disc list-inside space-y-2 text-lg">
+                    <li><strong class="font-semibold">بودجه ماهانه:</strong> حداکثر ۴,۰۰۰,۰۰۰ تومان.</li>
+                    <li><strong class="font-semibold">انحراف مواد مغذی:</strong> مقدار هر ماده مغذی در سبد نهایی، می‌تواند حداکثر ۱۵٪ با مقدار هدف ماهانه تفاوت داشته باشد. هرچه این درصد خطا کمتر باشد، بهتر است.</li>
+                    <li><strong class="font-semibold">ترجیحات بهینه‌سازی (امتیاز اضافی):</strong> علاوه بر تأمین حداقل‌ها، مطلوب است که خطاها در جهت ترجیحات لیلی باشند (مثلاً کالری کمتر، پروتئین بیشتر).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="foods" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">نمونه‌ای از مواد غذایی موجود</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p class="mb-6 text-lg">لیلی جدولی از مواد غذایی پرمصرف به همراه ارزش غذایی (در هر ۱۰۰ گرم) و قیمت (به تومان در هر کیلوگرم) تهیه کرده است. در زیر چند سطر نمونه از این جدول آمده است. (توجه: جدول کامل در فایل `foods.csv` پروژه اصلی قرار دارد.)</p>
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">ماده غذایی</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">کالری (kcal)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">پروتئین (g)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">چربی (g)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">کربوهیدرات (g)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">فیبر (g)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">کلسیم (mg)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">آهن (mg)</th>
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 text-right">قیمت (تومان/کیلوگرم)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">سینه مرغ</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">165</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">31</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">3.6</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">15</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">1.0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">90,000</td>
+                            </tr>
+                            <tr>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">ماهی قزل‌آلا</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">180</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">20</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">10</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">30</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0.5</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">175,000</td>
+                            </tr>
+                            <tr>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">تخم مرغ</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">140</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">12</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">10</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">1</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">50</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">1.8</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">50,000</td>
+                            </tr>
+                             <tr>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">لوبیا قرمز</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">120</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">8</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0.5</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">22</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">7</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">50</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">2.5</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">80,000</td>
+                            </tr>
+                            <tr>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">عدس</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">115</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">9</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">0.4</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">20</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">35</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">8</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">3.3</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">120,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <p class="mt-4 text-xs text-slate-500">توجه: مقادیر فیبر، کلسیم و آهن در جدول نمونه بر اساس تفسیر ساختار جدول در PDF وارد شده‌اند و ممکن است با مقادیر واقعی رایج برای برخی مواد غذایی متفاوت باشند.</p>
+            </div>
+        </section>
+
+        <section id="algorithms" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">الگوریتم‌های بهینه‌سازی</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p class="mb-6 text-lg">برای حل مسئله بهینه‌سازی سبد خرید لیلی، از دو الگوریتم فراابتکاری استفاده می‌شود: الگوریتم ژنتیک و الگوریتم تبرید شبیه‌سازی‌شده. این الگوریتم‌ها به یافتن راه‌حل‌های نزدیک به بهینه در فضاهای جستجوی پیچیده کمک می‌کنند.</p>
+                
+                <div class="border-b border-slate-300 mb-6">
+                    <nav class="flex space-x-4 space-x-reverse" aria-label="Tabs">
+                        <button id="ga-tab-button" class="tab-btn whitespace-nowrap text-slate-500 hover:text-emerald-600 text-lg font-medium active-tab" data-tab="ga-content">الگوریتم ژنتیک (GA)</button>
+                        <button id="sa-tab-button" class="tab-btn whitespace-nowrap text-slate-500 hover:text-emerald-600 text-lg font-medium" data-tab="sa-content">تبرید شبیه‌سازی‌شده (SA)</button>
+                    </nav>
+                </div>
+
+                <div id="ga-content" class="space-y-4">
+                    <h3 class="text-2xl font-semibold text-emerald-600">الگوریتم ژنتیک (GA)</h3>
+                    <p>الگوریتم ژنتیک از مفاهیم تکامل طبیعی مانند انتخاب، ترکیب (Crossover) و جهش (Mutation) برای بهبود تدریجی مجموعه‌ای از راه‌حل‌ها (جمعیت) استفاده می‌کند. هر راه‌حل (سبد خرید) به‌عنوان یک "ژنوتایپ" یا "کروموزوم" نمایش داده می‌شود که مقادیر مواد غذایی مختلف را در خود دارد.</p>
+                    <ul class="list-disc list-inside space-y-1 pl-4">
+                        <li><strong>جمعیت اولیه:</strong> مجموعه‌ای از سبدهای خرید تصادفی.</li>
+                        <li><strong>ارزیابی (Fitness):</strong> هر سبد بر اساس تأمین نیازهای تغذیه‌ای، هزینه و بهینگی مواد مغذی، یک امتیاز برازندگی دریافت می‌کند.</li>
+                        <li><strong>انتخاب والدین:</strong> سبدهای بهتر شانس بیشتری برای انتخاب شدن به‌عنوان والد دارند.</li>
+                        <li><strong>تولید مثل (ترکیب و جهش):</strong> والدین با هم ترکیب می‌شوند تا فرزندان جدیدی ایجاد کنند. جهش‌های تصادفی نیز برای حفظ تنوع اعمال می‌شوند.</li>
+                        <li><strong>جایگزینی نسل:</strong> نسل جدید جایگزین نسل قبلی می‌شود و این فرآیند تا رسیدن به معیار توقف تکرار می‌شود.</li>
+                    </ul>
+                    <p class="mt-4">نمودار زیر نمونه‌ای از چگونگی بهبود بهترین امتیاز برازندگی (Best Fitness) و میانگین امتیاز برازندگی (Average Fitness) جمعیت در طول نسل‌های مختلف الگوریتم ژنتیک را نشان می‌دهد.</p>
+                    <div class="chart-container mt-6">
+                        <canvas id="gaProgressChart"></canvas>
+                    </div>
+                </div>
+
+                <div id="sa-content" class="hidden space-y-4">
+                    <h3 class="text-2xl font-semibold text-emerald-600">الگوریتم تبرید شبیه‌سازی‌شده (SA)</h3>
+                    <p>الگوریتم تبرید شبیه‌سازی‌شده از فرآیند آنیل کردن (گرم و سرد کردن تدریجی) فلزات برای رسیدن به یک ساختار کریستالی با حداقل انرژی الهام گرفته شده است. این الگوریتم با یک راه‌حل اولیه شروع می‌کند و به‌تدریج به سمت راه‌حل‌های بهتر حرکت می‌کند، اما گاهی اوقات راه‌حل‌های بدتر را نیز با یک احتمال مشخص می‌پذیرد تا از گیر افتادن در بهینه‌های محلی جلوگیری کند. این احتمال به "دما" بستگی دارد که به‌تدریج کاهش می‌یابد.</p>
+                     <ul class="list-disc list-inside space-y-1 pl-4">
+                        <li><strong>حالت اولیه:</strong> یک سبد خرید تصادفی اولیه.</li>
+                        <li><strong>ارزیابی:</strong> کیفیت (معمولاً هزینه یا منفی برازندگی) راه‌حل فعلی محاسبه می‌شود.</li>
+                        <li><strong>تولید همسایه:</strong> یک راه‌حل جدید با اعمال تغییر کوچکی در راه‌حل فعلی ایجاد می‌شود (مثلاً تغییر مقدار یک ماده غذایی).</li>
+                        <li><strong>پذیرش راه‌حل:</strong> راه‌حل جدید اگر بهتر باشد، پذیرفته می‌شود. اگر بدتر باشد، با احتمالی که به دما و میزان بدتر بودن بستگی دارد، پذیرفته می‌شود.</li>
+                        <li><strong>به‌روزرسانی دما:</strong> دما به‌تدریج کاهش می‌یابد (برنامه خنک‌سازی).</li>
+                        <li><strong>تکرار:</strong> فرآیند تا رسیدن به معیار توقف (مثلاً دمای بسیار پایین) ادامه می‌یابد.</li>
+                    </ul>
+                    <p class="mt-4">نمودار زیر نمونه‌ای از چگونگی کاهش تابع هزینه (Cost Function) و همچنین روند کاهش دما (Temperature) در طول تکرارهای مختلف الگوریتم تبرید شبیه‌سازی‌شده را نشان می‌دهد.</p>
+                    <div class="chart-container mt-6">
+                        <canvas id="saProgressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">نتایج نمونه و تجزیه و تحلیل</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p class="mb-6 text-lg">در این بخش، یک نمونه از خروجی الگوریتم‌های بهینه‌سازی ارائه می‌شود. این نتایج *نمونه* هستند و برای نمایش چگونگی ارائه خروجی توسط برنامه اصلی پایتون (که در "پروژه ۲" شرح داده شده) آورده شده‌اند.</p>
+                
+                <h3 class="text-2xl font-semibold text-emerald-600 mb-4">سبد خرید ماهانه نمونه</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <p class="mb-2">مقادیر زیر نشان‌دهنده مقدار هر ماده غذایی (به کیلوگرم) در یک سبد خرید ماهانه بهینه‌شده نمونه است:</p>
+                        <ul id="sample-basket-list" class="list-disc list-inside space-y-1 bg-slate-50 p-4 rounded-md">
+                            <li>سینه مرغ: ۵.۵ کیلوگرم</li>
+                            <li>عدس: ۳.۰ کیلوگرم</li>
+                            <li>تخم مرغ: (معادل ۶۰ عدد) ۲.۵ کیلوگرم </li>
+                            <li>لوبیا قرمز: ۲.۰ کیلوگرم</li>
+                            <li>ماهی قزل‌آلا: ۱.۵ کیلوگرم</li>
+                            <li><em>سایر مواد غذایی از فهرست کامل...</em></li>
+                        </ul>
+                        <div class="mt-6 bg-emerald-50 p-4 rounded-lg shadow">
+                            <h4 class="text-xl font-semibold text-emerald-700">هزینه کل نمونه:</h4>
+                            <p class="text-2xl text-emerald-600 font-bold">۳,۸۵۰,۰۰۰ تومان</p>
+                            <p class="text-sm text-slate-500">(بودجه: ۴,۰۰۰,۰۰۰ تومان)</p>
+                        </div>
+                        <div class="mt-6 p-4 bg-sky-50 rounded-lg border border-sky-200">
+                            <h4 class="text-xl font-semibold text-sky-700 mb-3">✨ پیشنهاد دستور پخت</h4>
+                            <p id="recipe-suggestion-text" class="text-slate-600 min-h-[60px]">برای دریافت پیشنهاد دستور پخت با اقلام سبد نمونه، دکمه زیر را فشار دهید.</p>
+                            <button id="get-recipe-btn" class="gemini-feature-btn mt-3">دریافت پیشنهاد</button>
+                            <div id="recipe-loading-spinner" class="loading-spinner hidden"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <h3 class="text-2xl font-semibold text-emerald-600 mb-4">پروفایل تغذیه‌ای ماهانه نمونه</h3>
+                        <p class="mb-2">نمودار زیر مقایسه‌ای بین مقادیر مواد مغذی در سبد نمونه و مقادیر هدف ماهانه لیلی را نشان می‌دهد.</p>
+                        <div class="chart-container flex-grow">
+                            <canvas id="nutritionProfileChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="code-project" class="mb-16 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-8 text-center">کالبدشکافی کد پروژه (پایتون)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg text-lg">
+                <p class="mb-6">
+                    در این بخش، نگاهی دقیق‌تر به بخش‌های کلیدی کد پایتون که برای حل مسئله بهینه‌سازی سبد خرید لیلی نوشته شده است، می‌اندازیم. این کد با هدف یافتن بهترین ترکیب مواد غذایی با رعایت محدودیت‌ها و ترجیحات لیلی طراحی شده است. (توجه: کد نمایش داده شده در اینجا، خلاصه‌ای از کد اصلی و برای اهداف آموزشی است.)
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <button class="code-toggle-btn w-full text-left p-3 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600 transition-colors flex justify-between items-center" data-target="code-constants">
+                            ۱. بارگذاری داده‌ها و تعریف ثابت‌ها
+                            <span class="toggle-icon transform">▼</span>
+                        </button>
+                        <div id="code-constants" class="code-content hidden mt-2 p-4 border border-emerald-200 rounded-md bg-emerald-50">
+                            <p class="mb-3 text-slate-700">
+                                هر برنامه خوب با تعریف دقیق ورودی‌ها و پارامترهای ثابت شروع می‌شود. در این بخش، مقادیری مانند بودجه لیلی، اهداف تغذیه‌ای روزانه و ماهانه، و اطلاعات مواد غذایی (که از یک فایل CSV خوانده یا از گوگل درایو دانلود می‌شود) بارگذاری و آماده‌سازی می‌شوند. تابع `load_food_data` مسئول این کار است و در صورت عدم دسترسی به فایل، از داده‌های نمونه استفاده می‌کند.
+                            </p>
+                            <div class="code-block">
+                                <pre><code>
+# Constants
+BUDGET = 4_000_000  # Toman
+DAYS = 30
+DAILY_TARGETS = {
+    'Calories_kcal': 2000, 'Protein_g': 100, 'Fat_g': 60,
+    'Carbohydrates_g': 250, 'Fiber_g': 25, 
+    'Calcium_mg': 1000, 'Iron_mg': 18
+}
+MONTHLY_TARGETS = {k: v * DAYS for k, v in DAILY_TARGETS.items()}
+# ... (سایر ثابت‌ها)
+
+food_df = None
+NUM_FOODS = 0
+
+def load_food_data(gdrive_file_id, download_target_path="/content/foods.csv"):
+    global food_df, NUM_FOODS, fitness_cache
+    fitness_cache = {} # Reset cache
+    try:
+        # ... (منطق دانلود و پردازش CSV) ...
+        # Example processing:
+        # for col in NUTRIENT_COLUMNS:
+        #     if col in df.columns:
+        #         df[col] = df[col] * 10 # per 100g to per kg
+        # food_df = df
+        # NUM_FOODS = len(food_df)
+        print(f"Data loaded. Food items: {NUM_FOODS}")
+    except Exception as e:
+        # ... (Fallback to dummy data) ...
+        print(f"Using dummy data.")
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button class="code-toggle-btn w-full text-left p-3 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600 transition-colors flex justify-between items-center" data-target="code-fitness">
+                            ۲. قلب تپنده: تابع ارزیابی (Fitness Function)
+                            <span class="toggle-icon transform">▼</span>
+                        </button>
+                        <div id="code-fitness" class="code-content hidden mt-2 p-4 border border-emerald-200 rounded-md bg-emerald-50">
+                            <p class="mb-3 text-slate-700">
+                                تابع برازندگی (Fitness) به الگوریتم می‌گوید که یک راه‌حل (سبد خرید) چقدر خوب است. این تابع، سبد پیشنهادی را بر اساس رعایت بودجه، تأمین نیازهای تغذیه‌ای (با در نظر گرفتن انحراف مجاز ۱۵٪) و ترجیحات لیلی (مثلاً کالری کمتر، پروتئین بیشتر) امتیازدهی می‌کند. جریمه‌های سنگین برای نقض محدودیت‌های سخت (مانند بودجه یا انحراف بیش از حد) و جریمه‌های نرم‌تر برای انحرافات جزئی اعمال می‌شوند. برای افزایش سرعت، از یک حافظه موقت (cache) برای ذخیره نتایج ارزیابی راه‌حل‌های تکراری استفاده می‌شود.
+                            </p>
+                            <div class="code-block">
+                                <pre><code>
+fitness_cache = {}
+
+def _calculate_fitness_from_totals(total_nutrients, total_cost):
+    fitness = 0.0
+    if total_cost > BUDGET:
+        fitness -= (total_cost - BUDGET) * 1000 
+    # ... (منطق جریمه برای مواد مغذی و ترجیحات) ...
+    # if abs(percentage_deviation) > MAX_DEVIATION_PERCENT:
+    #     fitness -= (abs(percentage_deviation) - MAX_DEVIATION_PERCENT) * 1_000_000
+    # ... (جریمه نرم‌تر با penalty_multiplier) ...
+    return fitness
+
+def calculate_nutrition_and_cost_full(solution_kg):
+    # ... (محاسبه کامل مواد مغذی و هزینه از ابتدا برای یک solution_kg) ...
+    # total_nutrients = {...}; total_cost = ...
+    return total_nutrients, total_cost
+
+def fitness_function(solution_kg):
+    global fitness_cache
+    solution_tuple = tuple(solution_kg)
+    if solution_tuple in fitness_cache:
+        return fitness_cache[solution_tuple]
+    
+    total_nutrients, total_cost = calculate_nutrition_and_cost_full(solution_kg)
+    fitness = _calculate_fitness_from_totals(total_nutrients, total_cost)
+    
+    fitness_cache[solution_tuple] = fitness
+    return fitness
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="code-toggle-btn w-full text-left p-3 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600 transition-colors flex justify-between items-center" data-target="code-ga">
+                            ۳. تکامل هوشمند: الگوریتم ژنتیک (GA)
+                            <span class="toggle-icon transform">▼</span>
+                        </button>
+                        <div id="code-ga" class="code-content hidden mt-2 p-4 border border-emerald-200 rounded-md bg-emerald-50">
+                            <p class="mb-3 text-slate-700">
+                                الگوریتم ژنتیک با الهام از نظریه تکامل داروین کار می‌کند. مجموعه‌ای از راه‌حل‌های تصادفی (جمعیت اولیه) ایجاد شده و در طی نسل‌های متوالی، با استفاده از عملگرهای انتخاب (selection)، ترکیب (crossover) و جهش (mutation)، راه‌حل‌های بهتر تولید می‌شوند. تابع `genetic_algorithm` این فرآیند را مدیریت می‌کند.
+                            </p>
+                            <div class="code-block">
+                                <pre><code>
+def initialize_population(pop_size):
+    # return [generate_random_solution_ga() for _ in range(pop_size)]
+
+def selection_ga(population, fitnesses, num_parents):
+    # ... (انتخاب والدین با روش تورنمنت) ...
+
+def crossover_ga(parent1, parent2, crossover_rate):
+    # ... (ترکیب تک‌نقطه‌ای والدین برای تولید فرزندان) ...
+
+def mutate_ga(solution, mutation_rate, mutation_strength):
+    # ... (اعمال تغییرات تصادفی کوچک به راه‌حل) ...
+
+def genetic_algorithm(pop_size=50, num_generations=100, ...):
+    population = initialize_population(pop_size)
+    # ... (حلقه اصلی نسل‌ها) ...
+        # fitnesses = [fitness_function(ind) for ind in population] # Caching helps!
+        # ... (انتخاب، ترکیب، جهش، نخبه‌گرایی) ...
+    # return best_solution_overall, best_fitness_overall, history
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button class="code-toggle-btn w-full text-left p-3 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600 transition-colors flex justify-between items-center" data-target="code-sa">
+                            ۴. جستجوی هوشمند با حرارت: تبرید شبیه‌سازی‌شده (SA)
+                            <span class="toggle-icon transform">▼</span>
+                        </button>
+                        <div id="code-sa" class="code-content hidden mt-2 p-4 border border-emerald-200 rounded-md bg-emerald-50">
+                            <p class="mb-3 text-slate-700">
+                                الگوریتم تبرید شبیه‌سازی‌شده، مانند آهنگری که فلز را گرم و سپس به آرامی سرد می‌کند تا به ساختاری پایدار برسد، عمل می‌کند. این الگوریتم با یک راه‌حل اولیه شروع کرده و همسایه‌های آن را بررسی می‌کند. راه‌حل‌های بهتر همیشه پذیرفته می‌شوند، اما راه‌حل‌های بدتر نیز گاهی با احتمالی (که به "دما" بستگی دارد) پذیرفته می‌شوند تا از گیر افتادن در بهینه‌های محلی جلوگیری شود. دما به تدریج کاهش می‌یابد. برای افزایش سرعت، ارزیابی همسایه‌ها به صورت "افزایشی" انجام می‌شود، یعنی فقط تأثیر تغییر کوچک محاسبه می‌شود.
+                            </p>
+                            <div class="code-block">
+                                <pre><code>
+def generate_neighbor_solution_sa_incremental(current_solution_kg, current_total_nutrients, current_total_cost, temperature_ratio):
+    # ... (ایجاد همسایه با تغییر یک آیتم) ...
+    # ... (محاسبه افزایشی مواد مغذی و هزینه همسایه) ...
+    # quantity_delta = new_quantity - old_quantity
+    # neighbor_total_cost += quantity_delta * item_price
+    # neighbor_total_nutrients[nutrient] += quantity_delta * nutrient_per_kg
+    return neighbor_solution_kg, neighbor_total_nutrients, neighbor_total_cost
+
+def simulated_annealing(initial_temp=10000, final_temp=0.01, ...):
+    # current_solution_kg = ...
+    # current_total_nutrients, current_total_cost = calculate_nutrition_and_cost_full(current_solution_kg)
+    # current_fitness = _calculate_fitness_from_totals(current_total_nutrients, current_total_cost)
+    # current_overall_cost = -current_fitness
+    
+    # ... (حلقه اصلی کاهش دما) ...
+        # ... (حلقه تکرار در هر دما) ...
+            # neighbor_solution_kg, neighbor_total_nutrients, neighbor_total_cost = \
+            #    generate_neighbor_solution_sa_incremental(...)
+            # neighbor_fitness = _calculate_fitness_from_totals(neighbor_total_nutrients, neighbor_total_cost)
+            # neighbor_overall_cost = -neighbor_fitness
+            # ... (منطق پذیرش با احتمال) ...
+    # return best_solution_overall, best_overall_cost, history
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="code-toggle-btn w-full text-left p-3 bg-emerald-500 text-white font-semibold rounded-md hover:bg-emerald-600 transition-colors flex justify-between items-center" data-target="code-main">
+                            ۵. نقطه شروع: اجرای اصلی برنامه
+                            <span class="toggle-icon transform">▼</span>
+                        </button>
+                        <div id="code-main" class="code-content hidden mt-2 p-4 border border-emerald-200 rounded-md bg-emerald-50">
+                            <p class="mb-3 text-slate-700">
+                                در نهایت، بلوک `if __name__ == "__main__":` نقطه ورود برنامه است. در اینجا، داده‌ها بارگذاری شده، هر دو الگوریتم (ژنتیک و تبرید شبیه‌سازی‌شده) با پارامترهای مشخص فراخوانی می‌شوند، زمان اجرای آن‌ها اندازه‌گیری شده و نتایج نهایی به همراه نمودارها (که در این صفحه وب شبیه‌سازی شده‌اند) نمایش داده می‌شوند.
+                            </p>
+                            <div class="code-block">
+                                <pre><code>
+if __name__ == "__main__":
+    gdrive_file_id = "1oRHiYBwWCKarsbpwMBy82ng3iDdY2HJy" # شناسه فایل شما
+    colab_file_path = "/content/foods.csv"
+    
+    load_food_data(gdrive_file_id=gdrive_file_id, download_target_path=colab_file_path) 
+
+    if food_df is None or NUM_FOODS == 0:
+        print("Food data could not be loaded. Exiting.")
+    else:
+        print(f"--- Running Optimizations with {NUM_FOODS} Food Items ---")
+        
+        start_time_ga = time.time()
+        ga_solution, ga_fitness, ga_history = genetic_algorithm(
+            pop_size=50, num_generations=80, ... # پارامترهای کاهش‌یافته برای سرعت
+        )
+        # ... (چاپ نتایج GA) ...
+
+        start_time_sa = time.time()
+        sa_solution, sa_cost, sa_history = simulated_annealing(
+            initial_temp=8000, final_temp=0.01, ... # پارامترهای کاهش‌یافته برای سرعت
+        )
+        # ... (چاپ نتایج SA و خلاصه) ...
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-emerald-700 mb-6 text-center">درباره پروژه</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg text-lg">
+                <p class="mb-4">
+                    این صفحه صرفاً برای نمره گرفتن این‌جانب، مریم تلافی از درس هوش مصنوعی ایجاد شده است و فاقد هرگونه ارزش دیگری است.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="bg-slate-800 text-slate-300 py-8 text-center">
+        <p>&copy; ۱۴۰۴ - حقوق مادی و معنوی این سایت قابل تعویض با نمره است.</p>
+    </footer>
+
+    <script>
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        document.querySelectorAll('#mobile-menu a, nav a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+                if (mobileMenu.contains(this)) { 
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        const gaTabButton = document.getElementById('ga-tab-button');
+        const saTabButton = document.getElementById('sa-tab-button');
+        const gaContent = document.getElementById('ga-content');
+        const saContent = document.getElementById('sa-content');
+
+        if (gaTabButton && saTabButton && gaContent && saContent) {
+            gaTabButton.addEventListener('click', () => {
+                gaContent.classList.remove('hidden');
+                saContent.classList.add('hidden');
+                gaTabButton.classList.add('active-tab');
+                saTabButton.classList.remove('active-tab');
+            });
+
+            saTabButton.addEventListener('click', () => {
+                saContent.classList.remove('hidden');
+                gaContent.classList.add('hidden');
+                saTabButton.classList.add('active-tab');
+                gaTabButton.classList.remove('active-tab');
+            });
+        }
+        
+        // Code section toggles
+        document.querySelectorAll('.code-toggle-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+                const targetContent = document.getElementById(targetId);
+                const icon = button.querySelector('.toggle-icon');
+                if (targetContent) {
+                    targetContent.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180'); // Simple visual cue
+                }
+            });
+        });
+
+
+        const gaProgressCtx = document.getElementById('gaProgressChart').getContext('2d');
+        if (gaProgressCtx) {
+            new Chart(gaProgressCtx, {
+                type: 'line',
+                data: {
+                    labels: ['0', '۲۰', '۴۰', '۶۰', '۸۰', '۱۰۰', '۱۲۰', '۱۴۰', '۱۵۰'],
+                    datasets: [{
+                        label: 'بهترین برازندگی', data: [1500, 2800, 3500, 4200, 4800, 5300, 5700, 5900, 6000],
+                        borderColor: 'rgb(5, 150, 105)', tension: 0.1, fill: false
+                    }, {
+                        label: 'میانگین برازندگی', data: [800, 1500, 2200, 2800, 3300, 3800, 4200, 4500, 4600],
+                        borderColor: 'rgb(16, 185, 129)', borderDash: [5, 5], tension: 0.1, fill: false
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { title: { display: true, text: 'امتیاز برازندگی (Fitness)' } }, x: { title: { display: true, text: 'نسل‌ها' } } }, plugins: { tooltip: { mode: 'index', intersect: false } } }
+            });
+        }
+
+        const saProgressCtx = document.getElementById('saProgressChart').getContext('2d');
+        if (saProgressCtx) {
+            new Chart(saProgressCtx, {
+                type: 'line',
+                data: {
+                    labels: ['۰', '۱۰۰', '۲۰۰', '۳۰۰', '۴۰۰', '۵۰۰', '۶۰۰', '۷۰۰', '۸۰۰'],
+                    datasets: [{
+                        label: 'تابع هزینه', data: [10000, 7500, 5500, 4000, 3000, 2200, 1800, 1500, 1400],
+                        borderColor: 'rgb(217, 70, 239)', yAxisID: 'yCost', tension: 0.1,
+                    }, {
+                        label: 'دما', data: [1000, 800, 600, 400, 200, 100, 50, 20, 5],
+                        borderColor: 'rgb(59, 130, 246)', yAxisID: 'yTemp', tension: 0.1, borderDash: [5, 5],
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { yCost: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'هزینه' } }, yTemp: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'دما' }, grid: { drawOnChartArea: false } }, x: { title: { display: true, text: 'تکرارها' } } }, plugins: { tooltip: { mode: 'index', intersect: false } } }
+            });
+        }
+        
+        const nutritionProfileCtx = document.getElementById('nutritionProfileChart').getContext('2d');
+        if (nutritionProfileCtx) {
+            const nutrientLabels = ['کالری (KCal)', 'پروتئین (g)', 'چربی (g)', 'کربوهیدرات (g)', 'فیبر (g)', 'کلسیم (mg)', 'آهن (mg)'];
+            const monthlyTargets = [2000*30, 100*30, 60*30, 250*30, 25*30, 1000*30, 18*30];
+            const sampleActuals = [1950*30, 110*30, 58*30, 240*30, 28*30, 1050*30, 19*30];
+
+            new Chart(nutritionProfileCtx, {
+                type: 'bar',
+                data: {
+                    labels: nutrientLabels,
+                    datasets: [{
+                        label: 'مقدار هدف ماهانه', data: monthlyTargets,
+                        backgroundColor: 'rgba(5, 150, 105, 0.5)', borderColor: 'rgb(5, 150, 105)', borderWidth: 1
+                    }, {
+                        label: 'مقدار واقعی در سبد نمونه', data: sampleActuals,
+                        backgroundColor: 'rgba(245, 158, 11, 0.5)', borderColor: 'rgb(245, 158, 11)', borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'مقدار ماهانه' } }, x: { ticks: { callback: function(value) { const label = this.getLabelForValue(value); return label.length > 16 ? label.substring(0, 15) + '...' : label; } } } }, plugins: { tooltip: { mode: 'index' } } }
+            });
+        }
+
+        const apiKey = ""; 
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const nutritionalTipText = document.getElementById('nutritional-tip-text');
+        const getNutritionalTipBtn = document.getElementById('get-nutritional-tip-btn');
+        const tipLoadingSpinner = document.getElementById('tip-loading-spinner');
+
+        if (getNutritionalTipBtn) {
+            getNutritionalTipBtn.addEventListener('click', async () => {
+                nutritionalTipText.textContent = 'در حال دریافت نکته...';
+                tipLoadingSpinner.classList.remove('hidden');
+                getNutritionalTipBtn.disabled = true;
+                try {
+                    const prompt = "یک نکته تغذیه‌ای کوتاه و مفید برای یک رژیم غذایی سالم و متعادل ارائه دهید که برای یک دانشجو مناسب باشد. به زبان فارسی روان باشد.";
+                    const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                    const response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                        nutritionalTipText.textContent = result.candidates[0].content.parts[0].text;
+                    } else {
+                        nutritionalTipText.textContent = 'متاسفانه پاسخی دریافت نشد. لطفا دوباره تلاش کنید.';
+                    }
+                } catch (error) {
+                    console.error("Error fetching nutritional tip:", error);
+                    nutritionalTipText.textContent = 'خطا در دریافت نکته. لطفا اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.';
+                } finally {
+                    tipLoadingSpinner.classList.add('hidden');
+                    getNutritionalTipBtn.disabled = false;
+                }
+            });
+        }
+
+        const recipeSuggestionText = document.getElementById('recipe-suggestion-text');
+        const getRecipeBtn = document.getElementById('get-recipe-btn');
+        const recipeLoadingSpinner = document.getElementById('recipe-loading-spinner');
+        
+        if (getRecipeBtn) {
+            const sampleBasketItems = Array.from(document.querySelectorAll('#sample-basket-list li'))
+                                         .map(li => li.textContent.split(':')[0].trim()) 
+                                         .filter(item => !item.startsWith('سایر')); 
+
+            getRecipeBtn.addEventListener('click', async () => {
+                recipeSuggestionText.textContent = 'در حال دریافت پیشنهاد...';
+                recipeLoadingSpinner.classList.remove('hidden');
+                getRecipeBtn.disabled = true;
+                try {
+                    const prompt = `با استفاده از مواد غذایی زیر، یک یا دو ایده ساده برای تهیه غذا پیشنهاد دهید. مواد اولیه: ${sampleBasketItems.join('، ')}. دستور پخت‌ها کوتاه و مناسب برای یک دانشجو باشند. به زبان فارسی روان باشد.`;
+                    const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                    const response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                     if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0].text) {
+                        recipeSuggestionText.innerHTML = result.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                    } else {
+                        recipeSuggestionText.textContent = 'متاسفانه پاسخی دریافت نشد. لطفا دوباره تلاش کنید.';
+                    }
+                } catch (error) {
+                    console.error("Error fetching recipe suggestion:", error);
+                    recipeSuggestionText.textContent = 'خطا در دریافت پیشنهاد. لطفا اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.';
+                } finally {
+                    recipeLoadingSpinner.classList.add('hidden');
+                    getRecipeBtn.disabled = false;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
